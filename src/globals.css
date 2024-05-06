@@ -1,0 +1,14 @@
+* {
+	user-select: none;
+	box-sizing: border-box;
+  }
+  
+  *::-webkit-scrollbar {
+	width: .0625rem;
+	height: .375rem;
+	background: transparent;
+  }
+  
+  *::-webkit-scrollbar-thumb {
+	background: #1e40af;
+  }

@@ -1,0 +1,26 @@
+.icon {
+    width: rem(22px);
+    height: rem(22px);
+    color: light-dark(var(--mantine-color-gray-5), var(--mantine-color-yellow-5));
+    fill: light-dark(var(--mantine-color-gray-5), var(--mantine-color-yellow-5));
+  }
+  
+  .dark {
+    @mixin dark {
+      display: none;
+    }
+  
+    @mixin light {
+      display: block;
+    }
+  }
+  
+  .light {
+    @mixin light {
+      display: none;
+    }
+  
+    @mixin dark {
+      display: block;
+    }
+  }
