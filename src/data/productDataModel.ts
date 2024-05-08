@@ -1,29 +1,42 @@
-import { ProductsResponse } from '@/types';
-import { ProductType } from '@/types/product';
+import { ProductsResponse } from '@/types/db'
+import { productModelType } from '@/types/producto'
 
-export const productDataModel = (data: ProductsResponse): ProductType => {
-  return {
-    description: data.description,
-    gender: data.gender,
-    name: data.name,
-    slug: data.slug,
-    productId: data.product_id,
-    images: data.product_images,
-    brand: data.brand.name,
-    subcategory: data.subcategories.name,
-    feature: data.feature,
-    categories: {
-      name: data.subcategories.categories.name,
-      id: data.subcategories.categories.category_id
-    },
-    inventory: data.inventory.map((item) => ({
-      price: item.price,
-      stock: item.stock,
-      discount: item.discount,
-      inventoryId: item.inventory_id,
-      size: item.public_inventory_size_id_fkey,
-      color: item.public_inventory_color_id_fkey,
-      subColor: item.public_inventory_sub_color_id_fkey
-    }))
-  };
-};
+export const productDataModel = (data: ProductsResponse): productModelType => ({
+	id: data.id,
+	name: data.name,
+	description: data.description || '',
+	gender: data.gender,
+	created_at: data.created_at,
+	slug: data.slug,
+	feature: data.feature,
+	category:
+		{
+			id: data.products_category_id_fkey?.id || '',
+			name: data.products_category_id_fkey?.name || '',
+			description: data.products_category_id_fkey?.description || '',
+			parent: data.products_category_id_fkey?.parent || '',
+		} || null,
+	brand: data.products_brand_id_fkey?.name || '',
+	inventory:
+		data.inventory.map((item) => ({
+			id: item.id,
+			price: item.price,
+			stock: item.stock,
+			images: item.images || [],
+			discount: item.discount || null,
+			inventoryId: item.id,
+			size: {
+				name: item.inventory_size_fkey?.name || '',
+				gender: item.inventory_size_fkey?.gender || '',
+				size_guide: item.inventory_size_fkey?.size_guide || '',
+			},
+			primaryColor: {
+				name: item.inventory_primary_color_fkey?.name || '',
+				color: item.inventory_primary_color_fkey?.color || '',
+			},
+			secondaryColor: {
+				name: item.inventory_secondary_color_fkey?.name || '',
+				color: item.inventory_secondary_color_fkey?.color || '',
+			},
+		})) || [],
+})

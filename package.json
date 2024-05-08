@@ -19,11 +19,16 @@
     "@supabase/ssr": "^0.3.0",
     "@supabase/supabase-js": "^2.43.1",
     "@tabler/icons-react": "^3.3.0",
+    "axios": "^1.6.8",
+    "clsx": "^2.1.1",
     "dayjs": "^1.11.11",
+    "immer": "^10.1.1",
     "mantine-react-table": "^2.0.0-beta.1",
     "next": "14.2.3",
+    "next-cloudinary": "^6.5.2",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "zustand": "^4.5.2"
   },
   "devDependencies": {
     "@types/node": "^20",
@@ -34,6 +39,6 @@
     "postcss": "^8.4.38",
     "postcss-preset-mantine": "^1.15.0",
     "postcss-simple-vars": "^7.0.1",
-    "typescript": "^5"
+    "typescript": "^5.4.2"
   }
 }
