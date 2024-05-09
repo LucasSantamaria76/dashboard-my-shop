@@ -58,10 +58,12 @@ export interface ProductsResponse {
 	id: string
 	name: string
 	description: string | null
-	gender: string
+	gender: GenderType
 	created_at: string
 	slug: string
 	feature: string[] | null
+	brand_id: string
+	category_id: string
 	products_category_id_fkey: {
 		id: string
 		name: string

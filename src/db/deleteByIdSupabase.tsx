@@ -5,24 +5,13 @@ type Props = {
   table: string;
 };
 
-const ID = {
-  products: 'product_id',
-  brands: 'brand_id',
-  categories: 'category_id',
-  subcategories: 'subcategory_id',
-  providers: 'provider_id',
-  colors: 'color_id',
-  sizes: 'size_id',
-  inventory: 'inventory_id'
-};
-
 export const deleteByIdSupabase = async ({ id, table }: Props) => {
   try {
     //@ts-ignore
-    const { error } = await supabase.from(table).delete().eq(ID[table], id);
+    const { error } = await supabase.from(table).delete().eq('id', id)
 
-    if (error) throw error;
-    return { ok: true };
+		if (error) throw error
+		return { ok: true, error: null }
   } catch (error: any) {
     console.log(error);
     return { ok: false, error };

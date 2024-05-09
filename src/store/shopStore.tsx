@@ -34,6 +34,8 @@ interface Actions {
 	addNewSize: (size: SizesType) => void
 	addNewColor: (color: ColorsType) => void
 
+	updateProduct: (product: productModelType) => void
+
 	deleteById: ({ id, table }: { id: string; table: string }) => void
 }
 
@@ -49,7 +51,7 @@ const INITIAL_STATE: State = {
 
 const useShopStoreBase = create<State & Actions>()(
 	devtools(
-		immer((set) => ({
+		immer((set, get) => ({
 			...INITIAL_STATE,
 
 			//setUser: (user: ProfileType | null) => set({ user }),
@@ -78,10 +80,15 @@ const useShopStoreBase = create<State & Actions>()(
 
 			addNewColor: (color: ColorsType) => set((state) => ({ colors: [...state.colors, color] })),
 
+			updateProduct: (product: productModelType) =>
+				set((state) => ({
+					products: state.products.map((item) => (item.id === product.id ? product : item)),
+				})),
+
 			deleteById: ({ id, table }: { id: string; table: string }) =>
 				set((state) => ({
 					//@ts-ignore
-					[table]: state[table].filter((item: any) => item.productId !== id),
+					[table]: state[table].filter((item: unknown) => item.id !== id),
 				})),
 		}))
 	)

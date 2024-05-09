@@ -26,25 +26,17 @@ import { useEffect, useState } from 'react'
 import { Modal } from '../modals'
 import { FormBrand, FormCategory } from '.'
 import { IconPlus, IconSend2 } from '@tabler/icons-react'
-import { GenderType, ModalFormType } from '@/types/db'
-import { addNewProductSupabase } from '@/db'
+import { ModalFormType } from '@/types/db'
+import { addNewProductSupabase, updateProductSupabase } from '@/db'
 import classes from './styles.module.css'
 import { notifications } from '@mantine/notifications'
 import { supabaseErrors } from '@/constants'
+import { productModelType } from '@/types/producto'
 
 type PropsForm = {
 	action: 'create' | 'update'
-	product?: Omit<ProductsType, 'inventory'>
+	product?: Omit<productModelType, 'inventory'>
 	close: () => void
-}
-
-type ValuesType = {
-	name: string
-	description: string
-	gender: GenderType
-	brand_id: string
-	category_id: string
-	feature: string[]
 }
 
 export const FormProduct = ({ action, product, close }: PropsForm) => {
@@ -55,21 +47,41 @@ export const FormProduct = ({ action, product, close }: PropsForm) => {
 	const categories = useShopStore.use.categories()
 	const brands = useShopStore.use.brands()
 	const addNewProduct = useShopStore.use.addNewProduct()
-	const [subCategoriesValues, setSubCategoriesValues] = useState<{ value: string; label: string }[] | undefined>()
+	const updateProduct = useShopStore.use.updateProduct()
 
-	const { key, getInputProps, onSubmit, setFieldValue } = useForm<ValuesType>({
+	const { key, getInputProps, onSubmit, setFieldValue, initialize } = useForm<ProductsType>({
 		mode: 'uncontrolled',
 		initialValues: {
 			name: '',
 			description: '',
 			gender: 'Hombres',
-			brand_id: '',
-			category_id: '',
-			feature: [],
+			brand_id: null,
+			category_id: null,
+			feature: null,
+			created_at: '',
+			id: '',
+			slug: '',
 		},
 
 		validate: validateProduct,
 	})
+
+	useEffect(() => {
+		if (action === 'update')
+			initialize({
+				name: product?.name || '',
+				description: product?.description || '',
+				gender: product?.gender || 'Hombres',
+				brand_id: product?.brand_id || '',
+				category_id: product?.category_id || '',
+				feature: product?.feature || [],
+				created_at: product?.created_at || '',
+				id: product?.id || '',
+				slug: product?.slug || '',
+			})
+
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [action])
 
 	const handleFeatureList = () => {
 		if (!featureList.includes(inputValue) && inputValue !== '') {
@@ -88,26 +100,27 @@ export const FormProduct = ({ action, product, close }: PropsForm) => {
 	return (
 		<>
 			<form
-				onSubmit={onSubmit(async (values) => {
+				onSubmit={onSubmit(async ({ id, slug, created_at, ...resValues }) => {
 					try {
-						if (action === 'create') {
-							const res = await addNewProductSupabase(values)
-							if (res?.ok) {
-								addNewProduct(res.product!)
-								notifications.show({
-									title: 'Éxito',
-									message: 'Producto agregado correctamente',
-									color: 'green',
-								})
-								close()
-							} else throw res?.error
-						} else {
-							console.log(values)
-						}
+						const res =
+							action === 'create'
+								? await addNewProductSupabase(resValues)
+								: await updateProductSupabase({ id, slug, created_at, ...resValues })
+						console.log(res)
+
+						if (res?.ok) {
+							action === 'create' ? addNewProduct(res.product!) : updateProduct(res.product!)
+							notifications.show({
+								title: 'Éxito',
+								message: `Producto ${action === 'create' ? 'agregado' : 'actualizado'} correctamente`,
+								color: 'green',
+							})
+							close()
+						} else throw res?.error
 					} catch (error: any) {
 						notifications.show({
 							title: 'Error',
-							message: supabaseErrors[error.code] || 'Error inesperado',
+							message: supabaseErrors[error?.code || '1'],
 							color: 'red',
 						})
 					}
@@ -275,3 +288,4 @@ export const FormProduct = ({ action, product, close }: PropsForm) => {
 		</>
 	)
 }
+

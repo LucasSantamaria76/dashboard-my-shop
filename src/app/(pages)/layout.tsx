@@ -27,15 +27,6 @@ export default function PagesLayout({ children }: { children: React.ReactNode })
 		getColors().then(setColors)
 		getSizes().then(setSizes)
 
-		const channels = supabase
-			.channel('custom-filter-channel')
-			.on('postgres_changes', { event: '*', schema: 'public', table: 'inventory' }, () => {
-				getModelProducts().then(setProducts)
-			})
-			.on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => {
-				getModelProducts().then(setProducts)
-			})
-			.subscribe()
 	}, [setBrands, setCategories, setColors, setProducts, setProviders, setSizes])
 
 	return <>{children}</>

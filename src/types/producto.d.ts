@@ -1,3 +1,5 @@
+import { GenderType } from './db'
+
 export type inventoryModelType = {
 	id: string
 	price: number
@@ -23,7 +25,7 @@ export type productModelType = {
 	id: string
 	name: string
 	description: string
-	gender: string
+	gender: GenderType
 	created_at: string
 	slug: string
 	feature: string[] | null | undefined
@@ -37,5 +39,7 @@ export type productModelType = {
 		| null
 		| undefined
 	brand: string | null
+	brand_id: string
+	category_id: string
 	inventory: inventoryModelType[] | []
 }

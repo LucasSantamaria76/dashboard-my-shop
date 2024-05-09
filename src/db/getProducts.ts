@@ -3,7 +3,7 @@ import { QueryData } from '@supabase/supabase-js'
 
 export const getProducts = async () => {
 	try {
-		const productsQuery = supabase.from('products').select(`id, name, description, gender, created_at, slug, feature,
+		const productsQuery = supabase.from('products').select(`*,
 		products_category_id_fkey(*),
 		products_brand_id_fkey(name),
 		inventory(id, price, stock, discount,images,

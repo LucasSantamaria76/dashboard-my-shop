@@ -17,67 +17,45 @@ import { modals } from '@mantine/modals'
 import { useShopStore } from '@/store/shopStore'
 import type { productModelType } from '@/types/producto'
 
-/* 
-
-async () => {
-                const { ok } = await deleteByIdSupabase({
-                  id: row.original.productId,
-                  table: TABLES.PRODUCTS
-                });
-                if (ok) {
-                  deleteById({ id: row.original.productId, table: TABLES.PRODUCTS });
-                  notifications.show({
-                    title: '',
-                    message: 'Producto borrado correctamente',
-                    color: 'green'
-                  });
-                } else {
-                  notifications.show({
-                    title: '',
-                    message: 'Error al borrar el producto',
-                    color: 'red'
-                  });
-                }
-              }
-*/
 
 export const ProductsDataTable = () => {
 	const data = useShopStore.use.products() ?? []
-	/*   
-  const deleteById = useShopStore.use.deleteById(); */
+	const deleteById = useShopStore.use.deleteById()
+	const [action, setAction] = useState<'create' | 'update'>('create')
+	const [productToEdit, setProductToEdit] = useState<productModelType>()
 	const [openedModal, { open: openModal, close: closeModal }] = useDisclosure(false)
 
-	/* const modalConfirmDelete = useMemo(
-    () => (id: string) => {
-      modals.openConfirmModal({
-        title: 'Por favor confirma tu acción',
-        children: <Text size="sm">Confirma el borrado de este producto?</Text>,
-        labels: { confirm: 'Confirmar', cancel: 'Cancelar' },
-        confirmProps: { color: 'red', variant: 'light' },
-        onConfirm: async () => {
-          const { ok } = await deleteByIdSupabase({
-            id,
-            table: TABLES.PRODUCTS,
-          });
-          if (ok) {
-            deleteById({ id, table: TABLES.PRODUCTS });
-            notifications.show({
-              title: '',
-              message: 'Producto borrado correctamente',
-              color: 'green',
-            });
-          } else {
-            notifications.show({
-              title: '',
-              message: 'Error al borrar el producto',
-              color: 'red',
-            });
-          }
-        },
-      });
-    },
-    []
-  ); */
+	const modalConfirmDelete = useMemo(
+		() => (id: string) => {
+			modals.openConfirmModal({
+				title: 'Por favor confirma tu acción',
+				children: <Text size='sm'>Confirma el borrado de este producto?</Text>,
+				labels: { confirm: 'Confirmar', cancel: 'Cancelar' },
+				confirmProps: { color: 'red', variant: 'light' },
+				onConfirm: async () => {
+					const { ok } = await deleteByIdSupabase({
+						id,
+						table: TABLES.PRODUCTS,
+					})
+					if (ok) {
+						deleteById({ id, table: TABLES.PRODUCTS })
+						notifications.show({
+							title: '',
+							message: 'Producto borrado correctamente',
+							color: 'green',
+						})
+					} else {
+						notifications.show({
+							title: '',
+							message: 'Error al borrar el producto',
+							color: 'red',
+						})
+					}
+				},
+			})
+		},
+		[deleteById]
+	)
 
 	const columns = useMemo<MRT_ColumnDef<productModelType>[]>(
 		() => [
@@ -87,14 +65,17 @@ export const ProductsDataTable = () => {
 				size: 100,
 				Cell: ({ row }) => (
 					<Flex gap='md'>
-						<ActionIcon color='yellow' variant='subtle'>
+						<ActionIcon
+							color='yellow'
+							variant='subtle'
+							onClick={() => {
+								setProductToEdit(row.original)
+								setAction('update')
+								openModal()
+							}}>
 							<IconEdit stroke={0.5} />
 						</ActionIcon>
-						<ActionIcon
-							color='red'
-							variant='subtle'
-							// onClick={() => modalConfirmDelete(row.original.productId)}
-						>
+						<ActionIcon color='red' variant='subtle' onClick={() => modalConfirmDelete(row.original.id)}>
 							<IconTrash stroke={0.5} />
 						</ActionIcon>
 					</Flex>
@@ -122,7 +103,7 @@ export const ProductsDataTable = () => {
 				accessorFn: (row) => row.category?.name,
 			},
 		],
-		[]
+		[modalConfirmDelete, openModal]
 	)
 
 	const table = useMantineReactTable({
@@ -144,7 +125,16 @@ export const ProductsDataTable = () => {
 		},
 		renderTopToolbarCustomActions: ({ table }) => (
 			<Box style={{ display: 'flex', gap: '16px', padding: '4px' }}>
-				<Button variant='light' color='cyan' size='xs' leftSection={<IconShirt size={18} />} onClick={openModal}>
+				<Button
+					variant='light'
+					color='cyan'
+					size='xs'
+					leftSection={<IconShirt size={18} />}
+					onClick={() => {
+						setProductToEdit(undefined)
+						setAction('create')
+						openModal()
+					}}>
 					Nuevo producto
 				</Button>
 			</Box>
@@ -166,8 +156,8 @@ export const ProductsDataTable = () => {
 	return (
 		<>
 			<MantineReactTable table={table} />
-			<Modal opened={openedModal} close={closeModal} title={'Nuevo producto'}>
-				<FormProduct close={closeModal} action={'create'} />
+			<Modal opened={openedModal} close={closeModal} title={`${action === 'create' ? 'Nuevo' : 'Editar'} producto`}>
+				<FormProduct close={closeModal} action={action} product={action === 'update' ? productToEdit : undefined} />
 			</Modal>
 		</>
 	)

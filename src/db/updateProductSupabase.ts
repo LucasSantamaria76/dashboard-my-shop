@@ -1,23 +1,13 @@
-import { supabase } from '../supabase/client'
 import { productDataModel } from '@/data'
-import { GenderType } from '@/types/db'
+import { supabase } from '../supabase/client'
+import { GenderType, ProductsType } from '@/types/db'
 
-type ProductProps = {
-	name: string
-	description: string | null
-	gender: GenderType
-	category_id: string | null
-	brand_id: string | null
-	feature: string[] | null
-}
-
-export const addNewProductSupabase = async (dataProduct: ProductProps) => {
+export const updateProductSupabase = async (dataProduct: ProductsType) => {
 	try {
-		const slug = dataProduct.name.replace(/ /g, '_').toLowerCase()
-
 		const { data, error } = await supabase
 			.from('products')
-			.insert([{ ...dataProduct, slug }])
+			.update({ ...dataProduct })
+			.eq('id', dataProduct.id)
 			.select(
 				`*, products_category_id_fkey(*),
       				products_brand_id_fkey(name),

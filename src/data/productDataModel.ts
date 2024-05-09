@@ -17,6 +17,8 @@ export const productDataModel = (data: ProductsResponse): productModelType => ({
 			parent: data.products_category_id_fkey?.parent || '',
 		} || null,
 	brand: data.products_brand_id_fkey?.name || '',
+	brand_id: data?.brand_id || '',
+	category_id: data?.category_id || '',
 	inventory:
 		data.inventory.map((item) => ({
 			id: item.id,
