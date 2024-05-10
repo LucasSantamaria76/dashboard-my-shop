@@ -1,2 +1,2 @@
-export * from './ProductsDataTable'
 export * from './InventoryDataTable'
+export * from './ProductsDataTable'

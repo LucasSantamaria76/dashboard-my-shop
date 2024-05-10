@@ -54,6 +54,28 @@ export type OrdersType = typeof orders;
 
 //Responses
 
+export interface InventoryResponse {
+	id: string
+	price: number
+	stock: number
+	images: string[]
+	discount: number | null
+	product_id: string
+	inventory_size_fkey: {
+		name: string
+		gender: string
+		size_guide: string
+	} | null
+	inventory_primary_color_fkey: {
+		name: string
+		color: string
+	} | null
+	inventory_secondary_color_fkey: {
+		name: string
+		color: string
+	} | null
+}
+
 export interface ProductsResponse {
 	id: string
 	name: string
@@ -75,26 +97,7 @@ export interface ProductsResponse {
 		name: string
 		provider_id: string
 	} | null
-	inventory: Array<{
-		id: string
-		price: number
-		stock: number
-		images: string[]
-		discount: number | null
-		inventory_size_fkey: {
-			name: string
-			gender: string
-			size_guide: string
-		} | null
-		inventory_primary_color_fkey: {
-			name: string
-			color: string
-		} | null
-		inventory_secondary_color_fkey: {
-			name: string
-			color: string
-		} | null
-	}>
+	inventory: InventoryResponse[]
 }
 
 export type ModalFormType = {

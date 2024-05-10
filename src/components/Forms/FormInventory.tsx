@@ -6,16 +6,18 @@ import { useForm } from '@mantine/form'
 import { IconPlus } from '@tabler/icons-react'
 import { ImagesDropZone } from '..'
 import { useState } from 'react'
-import { addProductToInventorySupabase } from '@/db'
+import { addNewProductToInventorySupabase } from '@/db'
 import { notifications } from '@mantine/notifications'
 import { supabaseErrors } from '@/constants'
 import { validateInventory } from '@/validations'
-import { ModalFormType } from '@/types/db'
+import { InventoryResponse, ModalFormType } from '@/types/db'
 import { useDisclosure } from '@mantine/hooks'
 import { FormColors, FormNewSize } from '.'
 import { Modal } from '../modals'
+import { updateProductToInventorySupabase } from '@/db/updateProductToInventorySupabase'
 
 const initialValues = {
+	id: '',
 	product_id: '',
 	primary_color: '',
 	size: '',
@@ -32,6 +34,7 @@ type FormProps = {
 }
 
 export const FormInventory = ({ action, close, productName }: FormProps) => {
+	const updateProduct = useShopStore.use.updateProduct()
 	const product = useShopStore.use.products().find((product) => product.name === productName)
 	const colors = useShopStore.use.colors()
 	const sizes = useShopStore.use.sizes()
@@ -40,8 +43,8 @@ export const FormInventory = ({ action, close, productName }: FormProps) => {
 	const [modalForm, setModalForm] = useState<ModalFormType>({ title: '', name: '' })
 	const [imagesToDeleteCloudinary, setImagesToDeleteCloudinary] = useState<string[]>([])
 
-	const { key, getInputProps, onSubmit } = useForm<typeof initialValues>({
-		mode: 'uncontrolled',
+	const { getInputProps, onSubmit, getValues } = useForm<typeof initialValues>({
+		mode: 'controlled',
 		initialValues: {
 			...initialValues,
 			product_id: product?.id || '',
@@ -53,26 +56,27 @@ export const FormInventory = ({ action, close, productName }: FormProps) => {
 		<>
 			<form
 				onSubmit={onSubmit(async (product) => {
-					if (action === 'create') {
-						const { ok, error } = await addProductToInventorySupabase({ images, ...product })
+					try {
+						const res =
+							action === 'create'
+								? await addNewProductToInventorySupabase({ images, ...product })
+								: await updateProductToInventorySupabase({ images, ...product })
 
-						if (ok) {
+						if (res?.ok) {
+							updateProduct(res.product!)
 							notifications.show({
 								title: 'Éxito',
-								message: 'Producto agregado correctamente',
+								message: `Producto ${action === 'create' ? 'agregado' : 'actualizado'} correctamente`,
 								color: 'green',
 							})
 							close()
-						}
-
-						if (error)
-							notifications.show({
-								title: 'Error',
-								message: supabaseErrors[error.code],
-								color: 'red',
-							})
-					} else {
-						console.log(product)
+						} else throw res?.error
+					} catch (error: any) {
+						notifications.show({
+							title: 'Error',
+							message: supabaseErrors[error?.code || '1'],
+							color: 'red',
+						})
 					}
 				})}>
 				<Stack w={{ base: '80vw', sm: 600 }}>
@@ -92,7 +96,6 @@ export const FormInventory = ({ action, close, productName }: FormProps) => {
 							decimalScale={2}
 							fixedDecimalScale
 							thousandSeparator=','
-							key={key('price')}
 							{...getInputProps('price')}
 						/>
 						<NumberInput
@@ -104,7 +107,6 @@ export const FormInventory = ({ action, close, productName }: FormProps) => {
 							hideControls
 							min={0}
 							clampBehavior='strict'
-							key={key('stock')}
 							{...getInputProps('stock')}
 						/>
 						<NumberInput
@@ -118,7 +120,6 @@ export const FormInventory = ({ action, close, productName }: FormProps) => {
 							min={0}
 							max={100}
 							clampBehavior='strict'
-							key={key('discount')}
 							{...getInputProps('discount')}
 						/>
 					</Flex>
@@ -135,7 +136,6 @@ export const FormInventory = ({ action, close, productName }: FormProps) => {
 										value: size.id,
 										label: size.name,
 									}))}
-								key={key('size')}
 								{...getInputProps('size')}
 							/>
 							<Tooltip label='Añadir nuevo talle'>
@@ -163,7 +163,6 @@ export const FormInventory = ({ action, close, productName }: FormProps) => {
 									label: color.name,
 								}))}
 								w={'100%'}
-								key={key('primary_color')}
 								{...getInputProps('primary_color')}
 							/>
 							<Tooltip label='Añadir nuevo color'>
@@ -190,11 +189,16 @@ export const FormInventory = ({ action, close, productName }: FormProps) => {
 								label: color.name,
 							}))}
 							w={{ base: '100%', xs: '30%' }}
-							key={key('secondary_color')}
 							{...getInputProps('secondary_color')}
 						/>
 					</Flex>
-					<ImagesDropZone images={images} setImages={setImages} id={product?.id || ''} />
+					<ImagesDropZone
+						images={images}
+						setImages={setImages}
+						primaryColor={colors.find((color) => color.id === getValues().primary_color)?.name || ''}
+						secondaryColor={colors.find((color) => color.id === getValues().secondary_color)?.name || ''}
+						size={sizes.find((size) => size.id === getValues().size)?.name || ''}
+					/>
 					<Group justify='flex-end' m='sm'>
 						<Button variant='default' onClick={close}>
 							Cancelar

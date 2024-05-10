@@ -37,6 +37,7 @@ interface Actions {
 	updateProduct: (product: productModelType) => void
 
 	deleteById: ({ id, table }: { id: string; table: string }) => void
+	deleteFromInventory: ({ id, product_id }: { id: string; product_id: string }) => void
 }
 
 const INITIAL_STATE: State = {
@@ -89,6 +90,13 @@ const useShopStoreBase = create<State & Actions>()(
 				set((state) => ({
 					//@ts-ignore
 					[table]: state[table].filter((item: unknown) => item.id !== id),
+				})),
+
+			deleteFromInventory: ({ id, product_id }: { id: string; product_id: string }) =>
+				set((state) => ({
+					products: state.products.map((item) =>
+						item.id === product_id ? { ...item, inventory: item.inventory.filter((item) => item.id !== id) } : item
+					),
 				})),
 		}))
 	)

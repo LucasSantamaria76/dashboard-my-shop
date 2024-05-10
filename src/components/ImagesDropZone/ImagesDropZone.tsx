@@ -1,6 +1,6 @@
 'use client'
 
-import { cloudinary } from '@/Cloudinary'
+import { cloudinary, removeImgCloudinary } from '@/Cloudinary'
 import { Text, SimpleGrid, Group, rem, Paper, Box, CloseButton, useMantineColorScheme, Image } from '@mantine/core'
 import { Dropzone, IMAGE_MIME_TYPE } from '@mantine/dropzone'
 import { IconUpload, IconX, IconPhoto } from '@tabler/icons-react'
@@ -9,10 +9,12 @@ import { useEffect, useState } from 'react'
 type DropzoneProps = {
 	images: string[]
 	setImages: (images: string[]) => void
-	id: string
+	primaryColor: string
+	secondaryColor: string
+	size: string
 }
 
-export const ImagesDropZone = ({ images, setImages, id }: DropzoneProps & {}) => {
+export const ImagesDropZone = ({ images, setImages, primaryColor, secondaryColor, size }: DropzoneProps & {}) => {
 	const { colorScheme } = useMantineColorScheme()
 	const [dropImages, setDropImages] = useState<File[]>([])
 
@@ -39,7 +41,16 @@ export const ImagesDropZone = ({ images, setImages, id }: DropzoneProps & {}) =>
 					right={-2}
 					variant='transparent'
 					c={'red'}
-					onClick={() => setDropImages(dropImages.filter((image) => image !== file))}
+					onClick={() => {
+						const publicId = `e-shop/products/${file.name
+							.toLocaleLowerCase()
+							.substring(0, file.name.indexOf('.'))
+							.split(' ')
+							.join('_')}_${primaryColor}_${secondaryColor}_${size}`
+						setDropImages(dropImages.filter((image) => image !== file))
+						setImages(images.filter((image) => image !== publicId))
+						removeImgCloudinary(publicId)
+					}}
 				/>
 			</Box>
 		)
@@ -52,7 +63,7 @@ export const ImagesDropZone = ({ images, setImages, id }: DropzoneProps & {}) =>
 				.toLocaleLowerCase()
 				.substring(0, file.name.indexOf('.'))
 				.split(' ')
-				.join('_')}_${id}`
+				.join('_')}_${primaryColor}_${secondaryColor}_${size}`
 			const formData = new FormData()
 			formData.append('file', file)
 			formData.append('upload_preset', 'products')

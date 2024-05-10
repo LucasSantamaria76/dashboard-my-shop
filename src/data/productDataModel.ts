@@ -26,7 +26,7 @@ export const productDataModel = (data: ProductsResponse): productModelType => ({
 			stock: item.stock,
 			images: item.images || [],
 			discount: item.discount || null,
-			inventoryId: item.id,
+			product_id: item.product_id,
 			size: {
 				name: item.inventory_size_fkey?.name || '',
 				gender: item.inventory_size_fkey?.gender || '',

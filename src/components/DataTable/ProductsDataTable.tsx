@@ -38,6 +38,9 @@ export const ProductsDataTable = () => {
 						table: TABLES.PRODUCTS,
 					})
 					if (ok) {
+						/*
+						 * TODO: eliminar imágenes de cloudinary						*
+						 */
 						deleteById({ id, table: TABLES.PRODUCTS })
 						notifications.show({
 							title: '',
@@ -114,7 +117,6 @@ export const ProductsDataTable = () => {
 		positionToolbarAlertBanner: 'bottom',
 		enableGlobalFilter: false,
 		enableColumnPinning: true,
-		enableRowSelection: true,
 		enableStickyHeader: true,
 		localization: MRT_Localization_ES,
 		initialState: {
@@ -142,15 +144,6 @@ export const ProductsDataTable = () => {
 		renderDetailPanel: ({ row }) => (
 			<InventoryDataTable data={row.original.inventory} productName={row.original.name} />
 		),
-		/* renderToolbarAlertBannerContent: ({ table, selectedAlert }) => (
-			<Flex p='6px' gap='xl'>
-				{selectedAlert}
-
-				<Button leftSection={<IconTrash stroke={1} />} variant='light' color='red' size='xs'>
-					Borrar seleccionados
-				</Button>
-			</Flex>
-		), */
 	})
 
 	return (

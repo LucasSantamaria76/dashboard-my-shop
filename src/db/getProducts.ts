@@ -6,8 +6,7 @@ export const getProducts = async () => {
 		const productsQuery = supabase.from('products').select(`*,
 		products_category_id_fkey(*),
 		products_brand_id_fkey(name),
-		inventory(id, price, stock, discount,images,
-			inventory_primary_color_fkey(name,color),
+		inventory(*, inventory_primary_color_fkey(name,color),
 			inventory_secondary_color_fkey(name,color),
 			inventory_size_fkey(name,gender,size_guide))`)
 

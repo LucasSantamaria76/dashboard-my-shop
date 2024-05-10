@@ -4,9 +4,7 @@ export * from './addNewColorSupabase'
 export * from './addNewProductSupabase'
 export * from './addNewProviderSupabase'
 export * from './addNewSizeSupabase'
-export * from './addNewSubCategorySupabase'
-export * from './addProductToInventorySupabase'
-
+export * from './addNewProductToInventorySupabase'
 
 export * from './updateProductSupabase'
 
@@ -18,6 +16,7 @@ export * from './getCategories'
 export * from './getColors'
 export * from './getModelProducts'
 export * from './getProducts'
+export * from './getProductById'
 export * from './getProviders'
 export * from './getSizes'
 

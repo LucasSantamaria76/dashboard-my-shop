@@ -6,6 +6,7 @@ export type inventoryModelType = {
 	stock: number
 	images: string[] | []
 	discount: number | null
+	product_id: string
 	size: {
 		name: string
 		gender: string

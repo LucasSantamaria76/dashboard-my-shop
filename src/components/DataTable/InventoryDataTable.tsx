@@ -1,15 +1,21 @@
 'use client'
 
 import { inventoryModelType } from '@/types/producto'
-import { ActionIcon, Box, Button, Flex, Tooltip } from '@mantine/core'
+import { ActionIcon, Box, Button, Flex, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconEdit, IconShirt, IconTrash } from '@tabler/icons-react'
 import { MRT_ColumnDef, MantineReactTable, useMantineReactTable } from 'mantine-react-table'
 //@ts-ignore
 import { MRT_Localization_ES } from 'mantine-react-table/locales/es'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Modal } from '../modals'
 import { FormInventory } from '../Forms'
+import { useShopStore } from '@/store/shopStore'
+import { modals } from '@mantine/modals'
+import { deleteByIdSupabase } from '@/db'
+import { TABLES } from '@/constants'
+import { notifications } from '@mantine/notifications'
+import { removeImgCloudinary } from '@/Cloudinary'
 
 type Props = {
 	data: inventoryModelType[]
@@ -17,7 +23,43 @@ type Props = {
 }
 
 export const InventoryDataTable = ({ data, productName }: Props) => {
+	const deleteFromInventory = useShopStore.use.deleteFromInventory()
+	const [action, setAction] = useState<'create' | 'update'>('create')
+	const [inventoryToEdit, setInventoryToEdit] = useState<inventoryModelType>()
 	const [opened, { open, close }] = useDisclosure(false)
+
+	const modalConfirmDelete = useMemo(
+		() => (id: string, product_id: string, images: string[]) => {
+			modals.openConfirmModal({
+				title: 'Por favor confirma tu acción',
+				children: <Text size='sm'>Confirma el borrado del inventario de este producto?</Text>,
+				labels: { confirm: 'Confirmar', cancel: 'Cancelar' },
+				confirmProps: { color: 'red', variant: 'light' },
+				onConfirm: async () => {
+					const { ok } = await deleteByIdSupabase({
+						id,
+						table: TABLES.INVENTORY,
+					})
+					if (ok) {
+						images.forEach(async (publicId) => await removeImgCloudinary(publicId))
+						deleteFromInventory({ id, product_id })
+						notifications.show({
+							title: '',
+							message: 'Producto borrado del inventario correctamente',
+							color: 'green',
+						})
+					} else {
+						notifications.show({
+							title: '',
+							message: 'Error al borrar el producto del inventario',
+							color: 'red',
+						})
+					}
+				},
+			})
+		},
+		[deleteFromInventory]
+	)
 
 	const columns = useMemo<MRT_ColumnDef<inventoryModelType>[]>(
 		() => [
@@ -25,18 +67,24 @@ export const InventoryDataTable = ({ data, productName }: Props) => {
 				accessorKey: 'actions',
 				header: '',
 				size: 100,
-				Cell: () => (
+				Cell: ({ row }) => (
 					<Flex gap='md'>
-						<Tooltip label='Modificar producto'>
-							<ActionIcon color='yellow' variant='subtle'>
-								<IconEdit stroke={0.5} />
-							</ActionIcon>
-						</Tooltip>
-						<Tooltip label='Eliminar producto'>
-							<ActionIcon color='red' variant='subtle'>
-								<IconTrash stroke={0.5} />
-							</ActionIcon>
-						</Tooltip>
+						<ActionIcon
+							color='yellow'
+							variant='subtle'
+							onClick={() => {
+								setInventoryToEdit(row.original)
+								setAction('update')
+								open()
+							}}>
+							<IconEdit stroke={0.5} />
+						</ActionIcon>
+						<ActionIcon
+							color='red'
+							variant='subtle'
+							onClick={() => modalConfirmDelete(row.original.id, row.original.product_id, row.original.images)}>
+							<IconTrash stroke={0.5} />
+						</ActionIcon>
 					</Flex>
 				),
 			},
@@ -71,14 +119,13 @@ export const InventoryDataTable = ({ data, productName }: Props) => {
 				header: 'Descuento',
 			},
 		],
-		[]
+		[modalConfirmDelete, open]
 	)
 
 	const table = useMantineReactTable({
 		columns,
 		data,
 		enableGlobalFilter: false,
-		enableRowSelection: true,
 		enableColumnPinning: true,
 		enableGrouping: true,
 		positionToolbarDropZone: 'top',
@@ -92,23 +139,33 @@ export const InventoryDataTable = ({ data, productName }: Props) => {
 		},
 		renderTopToolbarCustomActions: ({ table }) => (
 			<Box style={{ display: 'flex', gap: '16px', padding: '4px' }}>
-				<Modal opened={opened} close={close} title={`Agregar ${productName} al inventario`}>
-					<FormInventory action={'create'} close={close} productName={productName} />
-				</Modal>
-				<Button variant='light' color='cyan' size='xs' leftSection={<IconShirt size={18} />} onClick={open}>
+				<Button
+					variant='light'
+					color='cyan'
+					size='xs'
+					leftSection={<IconShirt size={18} />}
+					onClick={() => {
+						setInventoryToEdit(undefined)
+						setAction('create')
+						open()
+					}}>
 					Agregar producto al inventario
 				</Button>
 			</Box>
 		),
-		mantineTableBodyRowProps: ({ row }) => ({
-			onClick: (event) => {
-				console.log('hola')
-			},
-			style: {
-				cursor: 'pointer', //you might want to change the cursor too when adding an onClick
-			},
-		}),
 	})
 
-	return <MantineReactTable table={table} />
+	return (
+		<>
+			<MantineReactTable table={table} />
+			<Modal
+				opened={opened}
+				close={close}
+				title={`${action === 'create' ? 'Agregar' : 'Editando'} ${productName} ${
+					action === 'create' ? 'al inventario' : 'del inventario'
+				}`}>
+				<FormInventory action={'create'} close={close} productName={productName} />
+			</Modal>
+		</>
+	)
 }

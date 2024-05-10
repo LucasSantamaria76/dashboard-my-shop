@@ -106,7 +106,6 @@ export const FormProduct = ({ action, product, close }: PropsForm) => {
 							action === 'create'
 								? await addNewProductSupabase(resValues)
 								: await updateProductSupabase({ id, slug, created_at, ...resValues })
-						console.log(res)
 
 						if (res?.ok) {
 							action === 'create' ? addNewProduct(res.product!) : updateProduct(res.product!)
