@@ -43,6 +43,7 @@ export const FormProduct = ({ action, product, close }: PropsForm) => {
 	const [openedModal, { open: openModal, close: closeModal }] = useDisclosure(false)
 	const [modalForm, setModalForm] = useState<ModalFormType>({ title: '', name: '' })
 	const [featureList, setFeatureList] = useState<string[]>([])
+	const [saving, setSaving] = useState<boolean>(false)
 	const [inputValue, setInputValue] = useState('')
 	const categories = useShopStore.use.categories()
 	const brands = useShopStore.use.brands()
@@ -102,6 +103,7 @@ export const FormProduct = ({ action, product, close }: PropsForm) => {
 			<form
 				onSubmit={onSubmit(async ({ id, slug, created_at, ...resValues }) => {
 					try {
+						setSaving(true)
 						const res =
 							action === 'create'
 								? await addNewProductSupabase(resValues)
@@ -122,6 +124,8 @@ export const FormProduct = ({ action, product, close }: PropsForm) => {
 							message: supabaseErrors[error?.code || '1'],
 							color: 'red',
 						})
+					} finally {
+						setSaving(false)
 					}
 				})}>
 				<Stack w={{ base: '100%', xs: 450, md: 600, lg: 800 }}>
@@ -271,10 +275,10 @@ export const FormProduct = ({ action, product, close }: PropsForm) => {
 						</Stack>
 					</SimpleGrid>
 					<Group justify='flex-end' m={'sm'}>
-						<Button variant='default' onClick={close}>
+						<Button variant='default' onClick={close} disabled={saving}>
 							Cancelar
 						</Button>
-						<Button variant='light' color='green' type='submit'>
+						<Button variant='light' color='green' type='submit' disabled={saving} loading={saving}>
 							Guardar
 						</Button>
 					</Group>

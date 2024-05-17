@@ -1,7 +1,7 @@
 'use client'
 
 import { inventoryModelType } from '@/types/producto'
-import { ActionIcon, Box, Button, Flex, Text } from '@mantine/core'
+import { ActionIcon, Box, Button, Center, Flex, Text } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { IconEdit, IconShirt, IconTrash } from '@tabler/icons-react'
 import { MRT_ColumnDef, MantineReactTable, useMantineReactTable } from 'mantine-react-table'
@@ -73,8 +73,8 @@ export const InventoryDataTable = ({ data, productName }: Props) => {
 							color='yellow'
 							variant='subtle'
 							onClick={() => {
+								setAction((prev) => (prev = 'update'))
 								setInventoryToEdit(row.original)
-								setAction('update')
 								open()
 							}}>
 							<IconEdit stroke={0.5} />
@@ -131,6 +131,13 @@ export const InventoryDataTable = ({ data, productName }: Props) => {
 		positionToolbarDropZone: 'top',
 		positionToolbarAlertBanner: 'bottom',
 		localization: MRT_Localization_ES,
+		renderEmptyRowsFallback: () => (
+			<Center>
+				<Text my={40} fw={900} c='cyan.6' size='lg'>
+					No hay datos para mostrar
+				</Text>
+			</Center>
+		),
 		initialState: {
 			columnPinning: {
 				left: ['name'],
@@ -164,7 +171,12 @@ export const InventoryDataTable = ({ data, productName }: Props) => {
 				title={`${action === 'create' ? 'Agregar' : 'Editando'} ${productName} ${
 					action === 'create' ? 'al inventario' : 'del inventario'
 				}`}>
-				<FormInventory action={'create'} close={close} productName={productName} />
+				<FormInventory
+					action={action}
+					close={close}
+					productName={productName}
+					inventory={action === 'update' ? inventoryToEdit : undefined}
+				/>
 			</Modal>
 		</>
 	)

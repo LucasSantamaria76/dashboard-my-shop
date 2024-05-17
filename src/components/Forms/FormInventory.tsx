@@ -5,7 +5,7 @@ import { ActionIcon, Box, Button, Flex, Group, NumberInput, Select, Stack, Toolt
 import { useForm } from '@mantine/form'
 import { IconPlus } from '@tabler/icons-react'
 import { ImagesDropZone } from '..'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { addNewProductToInventorySupabase } from '@/db'
 import { notifications } from '@mantine/notifications'
 import { supabaseErrors } from '@/constants'
@@ -15,6 +15,8 @@ import { useDisclosure } from '@mantine/hooks'
 import { FormColors, FormNewSize } from '.'
 import { Modal } from '../modals'
 import { updateProductToInventorySupabase } from '@/db/updateProductToInventorySupabase'
+import { inventoryModelType } from '@/types/producto'
+import { removeImgCloudinary } from '@/Cloudinary'
 
 const initialValues = {
 	id: '',
@@ -31,19 +33,21 @@ type FormProps = {
 	close: () => void
 	action: 'create' | 'update'
 	productName: string
+	inventory?: inventoryModelType
 }
 
-export const FormInventory = ({ action, close, productName }: FormProps) => {
+export const FormInventory = ({ action, close, productName, inventory }: FormProps) => {
 	const updateProduct = useShopStore.use.updateProduct()
 	const product = useShopStore.use.products().find((product) => product.name === productName)
 	const colors = useShopStore.use.colors()
 	const sizes = useShopStore.use.sizes()
 	const [images, setImages] = useState<string[]>([])
+	const [prevImages, setPrevImages] = useState<string[]>([])
+	const [saving, setSaving] = useState<boolean>(false)
 	const [openedModal, { open: openModal, close: closeModal }] = useDisclosure(false)
 	const [modalForm, setModalForm] = useState<ModalFormType>({ title: '', name: '' })
-	const [imagesToDeleteCloudinary, setImagesToDeleteCloudinary] = useState<string[]>([])
 
-	const { getInputProps, onSubmit, getValues } = useForm<typeof initialValues>({
+	const { getInputProps, onSubmit, getValues, setFieldValue, initialize } = useForm<typeof initialValues>({
 		mode: 'controlled',
 		initialValues: {
 			...initialValues,
@@ -52,11 +56,32 @@ export const FormInventory = ({ action, close, productName }: FormProps) => {
 		validate: validateInventory,
 	})
 
+	useEffect(() => {
+		if (action === 'update') {
+			initialize({
+				id: inventory?.id || '',
+				product_id: inventory?.product_id || '',
+				primary_color: colors.find((c) => c.name === inventory?.primaryColor.name)?.id || '',
+				size: sizes.find((s) => s.name === inventory?.size.name)?.id || '',
+				stock: inventory?.stock || 1,
+				price: inventory?.price || 0,
+				discount: inventory?.discount || 0,
+				secondary_color: colors.find((c) => c.name === inventory?.secondaryColor.name)?.id || '',
+			})
+
+			setImages(inventory?.images || [])
+			setPrevImages(inventory?.images || [])
+		}
+
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [action])
+
 	return (
 		<>
 			<form
 				onSubmit={onSubmit(async (product) => {
 					try {
+						setSaving(true)
 						const res =
 							action === 'create'
 								? await addNewProductToInventorySupabase({ images, ...product })
@@ -69,6 +94,7 @@ export const FormInventory = ({ action, close, productName }: FormProps) => {
 								message: `Producto ${action === 'create' ? 'agregado' : 'actualizado'} correctamente`,
 								color: 'green',
 							})
+
 							close()
 						} else throw res?.error
 					} catch (error: any) {
@@ -77,6 +103,8 @@ export const FormInventory = ({ action, close, productName }: FormProps) => {
 							message: supabaseErrors[error?.code || '1'],
 							color: 'red',
 						})
+					} finally {
+						setSaving(false)
 					}
 				})}>
 				<Stack w={{ base: '80vw', sm: 600 }}>
@@ -94,7 +122,6 @@ export const FormInventory = ({ action, close, productName }: FormProps) => {
 							clampBehavior='strict'
 							prefix='$'
 							decimalScale={2}
-							fixedDecimalScale
 							thousandSeparator=','
 							{...getInputProps('price')}
 						/>
@@ -164,6 +191,10 @@ export const FormInventory = ({ action, close, productName }: FormProps) => {
 								}))}
 								w={'100%'}
 								{...getInputProps('primary_color')}
+								onChange={(value) => {
+									setFieldValue('primary_color', value!)
+									setFieldValue('secondary_color', value!)
+								}}
 							/>
 							<Tooltip label='Añadir nuevo color'>
 								<ActionIcon
@@ -192,18 +223,23 @@ export const FormInventory = ({ action, close, productName }: FormProps) => {
 							{...getInputProps('secondary_color')}
 						/>
 					</Flex>
-					<ImagesDropZone
-						images={images}
-						setImages={setImages}
-						primaryColor={colors.find((color) => color.id === getValues().primary_color)?.name || ''}
-						secondaryColor={colors.find((color) => color.id === getValues().secondary_color)?.name || ''}
-						size={sizes.find((size) => size.id === getValues().size)?.name || ''}
-					/>
+					{getValues().primary_color && getValues().secondary_color && getValues().size ? (
+						<ImagesDropZone images={images} setImages={setImages} />
+					) : null}
 					<Group justify='flex-end' m='sm'>
-						<Button variant='default' onClick={close}>
+						<Button
+							variant='default'
+							onClick={() => {
+								images.forEach(async (el) => !prevImages.includes(el) && (await removeImgCloudinary(el)))
+
+								setImages((current) => (current = prevImages))
+
+								close()
+							}}
+							disabled={saving}>
 							Cancelar
 						</Button>
-						<Button variant='light' color='green' type='submit'>
+						<Button variant='light' color='green' type='submit' disabled={saving} loading={saving}>
 							Guardar
 						</Button>
 					</Group>

@@ -1,6 +1,6 @@
 'use client'
 
-import { ActionIcon, Box, Button, Flex, Text } from '@mantine/core'
+import { ActionIcon, Box, Button, Center, Flex, Text } from '@mantine/core'
 import { IconEdit, IconShirt, IconTrash } from '@tabler/icons-react'
 //@ts-ignore
 import { MRT_Localization_ES } from 'mantine-react-table/locales/es'
@@ -16,7 +16,6 @@ import { notifications } from '@mantine/notifications'
 import { modals } from '@mantine/modals'
 import { useShopStore } from '@/store/shopStore'
 import type { productModelType } from '@/types/producto'
-
 
 export const ProductsDataTable = () => {
 	const data = useShopStore.use.products() ?? []
@@ -119,6 +118,13 @@ export const ProductsDataTable = () => {
 		enableColumnPinning: true,
 		enableStickyHeader: true,
 		localization: MRT_Localization_ES,
+		renderEmptyRowsFallback: () => (
+			<Center>
+				<Text my={40} fw={900} c='cyan.6' size='lg'>
+					No hay datos para mostrar
+				</Text>
+			</Center>
+		),
 		initialState: {
 			columnPinning: {
 				left: ['actions', 'name'],
